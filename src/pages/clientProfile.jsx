@@ -12,7 +12,7 @@ const ClientProfile = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/profile/' + profileCode);
+                const response = await fetch('https://hassanabbasnaqvi.pythonanywhere.com/api/profile/' + profileCode);
                 if (!response.ok) {
                     throw new Error('Failed to fetch data');
                 }

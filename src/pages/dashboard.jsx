@@ -11,21 +11,34 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [sortField, setSortField] = useState('Nome');
   const [sortDirection, setSortDirection] = useState('asc');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
   const navigate = useNavigate();
-  // Fetch data from API
+  
+  // Fetch data from API with pagination
   useEffect(() => {
     const fetchClients = async () => {
       try {
         setLoading(true);
-        // Replace with your actual API endpoint
-        const response = await fetch('http://127.0.0.1:8000/api/get-data/');
+        // Fetch data for current page
+        const url = `http://hassanabbasnaqvi.pythonanywhere.com/api/get-data/${currentPage}/`;
+        const response = await fetch(url);
         const data = await response.json();
         
         // Transform the API data into a more usable format
         const transformedData = transformApiData(data);
         setClients(transformedData);
         setFilteredClients(transformedData);
+        
+        // Check if next page exists by trying to fetch next page data
+        // You might want to adjust this based on your API response structure
+        setHasNextPage(transformedData.length > 0); // Simple check - if we got data, assume there might be more
+        setHasPreviousPage(currentPage > 1);
+        
       } catch (err) {
         setError('Failed to fetch client data');
         console.error('Error fetching data:', err);
@@ -35,7 +48,19 @@ const Dashboard = () => {
     };
 
     fetchClients();
-  }, []);
+  }, [currentPage]); // Refetch when page changes
+
+  // Filter clients based on search term (client-side filtering)
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredClients(clients);
+    } else {
+      const filtered = clients.filter(client =>
+        client.Nome?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredClients(filtered);
+    }
+  }, [searchTerm, clients]);
 
   // Transform API data from object of arrays to array of objects
   const transformApiData = (apiData) => {
@@ -52,18 +77,6 @@ const Dashboard = () => {
     }
     return transformed;
   };
-
-  // Filter clients based on search term
-  useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredClients(clients);
-    } else {
-      const filtered = clients.filter(client =>
-        client.Nome?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredClients(filtered);
-    }
-  }, [searchTerm, clients]);
 
   // Handle search input change
   const handleSearch = (e) => {
@@ -91,6 +104,16 @@ const Dashboard = () => {
       return bValue.localeCompare(aValue);
     }
   });
+
+  // Handle next page
+  const handleNextPage = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  // Handle previous page
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1));
+  };
 
   // Format phone number for display
   const formatPhoneNumber = (phone) => {
@@ -137,7 +160,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1>Lista de Clientes</h1>
-          <p>Total: {clients.length} clientes</p>
+          <p>Página {currentPage}</p>
         </div>
         <div className="header-actions">
           <div className="search-box">
@@ -214,11 +237,30 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Table Footer */}
+        {/* Table Footer with Simple Pagination */}
         <div className="table-footer">
           <div className="footer-info">
-            Mostrando {sortedClients.length} de {clients.length} clientes
+            Página {currentPage} • {sortedClients.length} clientes
             {searchTerm && ` para "${searchTerm}"`}
+          </div>
+          
+          <div className="pagination-controls">
+            <div className="pagination-buttons">
+              <button 
+                className="btn btn-secondary" 
+                onClick={handlePreviousPage}
+                disabled={!hasPreviousPage}
+              >
+                Página Anterior
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleNextPage}
+                disabled={!hasNextPage}
+              >
+                Próxima Página
+              </button>
+            </div>
           </div>
         </div>
       </section>
