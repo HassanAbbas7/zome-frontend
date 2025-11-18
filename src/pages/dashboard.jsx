@@ -26,12 +26,12 @@ const Dashboard = () => {
     const fetchClients = async () => {
       try {
         setLoading(true);
-        // Fetch data for current page
+        
         const url = `https://hassanabbasnaqvi.pythonanywhere.com/api/get-data/${currentPage}/`;
         const response = await fetch(url);
         const data = await response.json();
         
-        // Transform the API data into a more usable format
+        
         const transformedData = transformApiData(data);
         setClients(transformedData);
         setFilteredClients(transformedData);
@@ -111,7 +111,7 @@ const Dashboard = () => {
 
     if (searchTerm.trim() === '') {
       setFilteredClients(clients);
-      setLoading(false);
+      // setLoading(false);
     } else {
       // Add a small delay to avoid making requests on every single keystroke
       const timeoutId = setTimeout(() => {
@@ -247,6 +247,25 @@ const Dashboard = () => {
 
       {/* Clients Table */}
       <section className="clients-section">
+        <div className="pagination-controls">
+                <div className="pagination-buttons">
+                  <button 
+                    style={{ marginRight: '10px' }}
+                    className="btn btn-secondary" 
+                    onClick={handlePreviousPage}
+                    disabled={!hasPreviousPage}
+                  >
+                    Página Anterior
+                  </button>
+                  <button 
+                    className="btn btn-secondary" 
+                    onClick={handleNextPage}
+                    disabled={!hasNextPage}
+                  >
+                    Próxima Página
+                  </button>
+                </div>
+              </div>
         {loading ? (
           <div className="dashboard-loading">
             <div className="loading-spinner"></div>
@@ -320,24 +339,7 @@ const Dashboard = () => {
                 {searchTerm && ` para "${searchTerm}"`}
               </div>
               
-              <div className="pagination-controls">
-                <div className="pagination-buttons">
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={handlePreviousPage}
-                    disabled={!hasPreviousPage}
-                  >
-                    Página Anterior
-                  </button>
-                  <button 
-                    className="btn btn-secondary" 
-                    onClick={handleNextPage}
-                    disabled={!hasNextPage}
-                  >
-                    Próxima Página
-                  </button>
-                </div>
-              </div>
+              
             </div>
           </>
         )}
