@@ -67,7 +67,7 @@ const Dashboard = () => {
     const fetchClients = async () => {
       try {
         setLoading(true);
-        const url = `https://hassanabbasnaqvi.pythonanywhere.com/api/search`;
+        const url = `http://127.0.0.1:5000/api/search`;
         const response = await fetch(url, {
           method: 'POST',
           body: JSON.stringify({ name: searchTerm }),
