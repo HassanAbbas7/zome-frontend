@@ -27,7 +27,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
         
-        const url = `https://hassanabbasnaqvi.pythonanywhere.com/api/get-data/${currentPage}/`;
+        const url = `https://127.0.0.1:5000/api/get-data/${currentPage}/`;
         const response = await fetch(url);
         const data = await response.json();
         
