@@ -9,25 +9,41 @@ const ClientProfile = () => {
     const [groupedData, setGroupedData] = useState({});
     const { profileCode } = useParams();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch('https://hassanabbasnaqvi.pythonanywhere.com/api/profile/' + profileCode);
+     useEffect(() => {
+    const fetchData = async () => {
+        try {
+            const fetchFromUrl = async (url) => {
+                const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch data');
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const result = await response.json();
-                setData(result);
-                organizeData(result);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+                return response.json();
+            };
 
-        fetchData();
-    }, [profileCode]);
+            const primaryUrl = `https://hassanabbasnaqvi.pythonanywhere.com/api/profile/${profileCode}`;
+            const fallbackUrl = `http://127.0.0.1:5000/api/profile/${profileCode}`;
+            
+            let result;
+
+            try {
+                result = await fetchFromUrl(primaryUrl);
+            } catch (primaryError) {
+                console.warn('Primary profile API failed, trying localhost:', primaryError);
+                result = await fetchFromUrl(fallbackUrl);
+            }
+
+            setData(result);
+            organizeData(result);
+            
+        } catch (err) {
+            setError('Failed to fetch profile data from both servers: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchData();
+}, [profileCode]); 
 
     const getValue = (key, dataObj = data) => {
         if (!dataObj || dataObj[key] === undefined || dataObj[key] === null) {

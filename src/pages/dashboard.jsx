@@ -27,10 +27,25 @@ const Dashboard = () => {
       try {
         setLoading(true);
         
-        const url = `https://hassanabbasnaqvi.pythonanywhere.com/api/get-data/${currentPage}/`;
-        const response = await fetch(url);
-        const data = await response.json();
+        // Primary API URL
+        const primaryUrl = `https://hassanabbasnaqvi.pythonanywhere.com/api/get-data/${currentPage}/`;
         
+        // Fallback URL
+        const fallbackUrl = `http://127.0.0.1:5000/api/get-data/${currentPage}/`;
+        
+        let response;
+        
+        // Try primary URL first
+        try {
+          response = await fetch(primaryUrl);
+          if (!response.ok) throw new Error('Primary API failed');
+        } catch (primaryError) {
+          console.warn('Primary API failed, trying localhost:', primaryError);
+          response = await fetch(fallbackUrl);
+          if (!response.ok) throw new Error('Fallback API also failed');
+        }
+        
+        const data = await response.json();
         
         const transformedData = transformApiData(data);
         setClients(transformedData);
@@ -41,8 +56,8 @@ const Dashboard = () => {
         setHasPreviousPage(currentPage > 1);
         
       } catch (err) {
-        setError('Failed to fetch client data');
-        console.error('Error fetching data:', err);
+        setError('Failed to fetch client data from both primary and fallback servers');
+        console.error('Error fetching data from all sources:', err);
       } finally {
         setLoading(false);
       }
@@ -52,7 +67,7 @@ const Dashboard = () => {
       setLoading(true);
       fetchClients();
     }
-  }, [currentPage, searchTerm]); 
+  }, [currentPage, searchTerm]);
 
   useEffect(() => {
     // Cancel previous request if it exists
@@ -67,39 +82,62 @@ const Dashboard = () => {
     const fetchClients = async () => {
       try {
         setLoading(true);
-        const url = `https://hassanabbasnaqvi.pythonanywhere.com/api/search`;
-        const response = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({ name: searchTerm }),
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          signal: signal // Attach abort signal to the request
-        });
+        
+        const fetchFromUrl = async (url) => {
+          const response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({ name: searchTerm }),
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            signal: signal // Attach abort signal to the request
+          });
 
-        // Check if the request was aborted
+          // Check if the request was aborted
+          if (signal.aborted) {
+            console.log('Request was aborted');
+            return null;
+          }
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          return response.json();
+        };
+        
+        const primaryUrl = `https://hassanabbasnaqvi.pythonanywhere.com/api/search`;
+        const fallbackUrl = `http://127.0.0.1:5000/api/search`;
+        
+        let data;
+
+        try {
+          data = await fetchFromUrl(primaryUrl);
+        } catch (primaryError) {
+          console.warn('Primary search API failed, trying localhost:', primaryError);
+          data = await fetchFromUrl(fallbackUrl);
+        }
+
+        // Check if request was aborted during fallback attempt
         if (signal.aborted) {
-          console.log('Request was aborted');
+          console.log('Request was aborted during fallback');
           return;
         }
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (data) {
+          const transformedData = transformApiData(data);
+          setClients(transformedData);
+          setFilteredClients(transformedData);
+          
+          setHasNextPage(transformedData.length > 0);
+          setHasPreviousPage(currentPage > 1);
         }
-
-        const data = await response.json();
-        const transformedData = transformApiData(data);
-        setClients(transformedData);
-        setFilteredClients(transformedData);
-        
-        setHasNextPage(transformedData.length > 0);
-        setHasPreviousPage(currentPage > 1);
         
       } catch (err) {
         // Only set error if it's not an abort error
         if (err.name !== 'AbortError') {
-          setError('Failed to fetch client data');
-          console.error('Error fetching data:', err);
+          setError('Failed to fetch client data from both primary and fallback servers');
+          console.error('Error fetching search data:', err);
         }
       } finally {
         // Only stop loading if this request wasn't aborted
