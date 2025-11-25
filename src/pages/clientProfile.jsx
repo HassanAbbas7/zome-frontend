@@ -21,7 +21,7 @@ const ClientProfile = () => {
             };
 
             const primaryUrl = `https://hassanabbasnaqvi.pythonanywhere.com/api/profile/${profileCode}`;
-            const fallbackUrl = `http://127.0.0.1:5000/api/profile/${profileCode}`;
+            const fallbackUrl = `http://127.0.0.1:3000/api/profile/${profileCode}`;
             
             let result;
 

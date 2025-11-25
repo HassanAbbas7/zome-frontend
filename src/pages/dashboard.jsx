@@ -31,7 +31,7 @@ const Dashboard = () => {
         const primaryUrl = `https://hassanabbasnaqvi.pythonanywhere.com/api/get-data/${currentPage}/`;
         
         // Fallback URL
-        const fallbackUrl = `http://127.0.0.1:5000/api/get-data/${currentPage}/`;
+        const fallbackUrl = `http://127.0.0.1:3000/api/get-data/${currentPage}/`;
         
         let response;
         
@@ -107,7 +107,7 @@ const Dashboard = () => {
         };
         
         const primaryUrl = `https://hassanabbasnaqvi.pythonanywhere.com/api/search`;
-        const fallbackUrl = `http://127.0.0.1:5000/api/search`;
+        const fallbackUrl = `http://127.0.0.1:3000/api/search`;
         
         let data;
 
